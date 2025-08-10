@@ -1,0 +1,403 @@
+<!DOCTYPE html>
+<html lang="en" >
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Precision Stopwatch Challenge with Themes & History</title>
+  <style>
+    /* Common styles */
+    body, html {
+      margin: 0; padding: 0;
+      height: 100%;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      font-weight: 600;
+      user-select: none;
+      transition: background 0.5s, color 0.5s, font-family 0.5s;
+    }
+    #app {
+      width: 340px;
+      padding: 2rem;
+      border-radius: 20px;
+      backdrop-filter: blur(15px);
+      box-shadow: 0 0 30px rgba(0,0,0,0.3);
+      text-align: center;
+      transition: background 0.5s, box-shadow 0.5s;
+    }
+    h1 {
+      margin: 0 0 1rem 0;
+      font-weight: 900;
+      letter-spacing: 0.05em;
+      user-select:none;
+    }
+    .goal {
+      margin-bottom: 1rem;
+      font-size: 1.2rem;
+      font-weight: 600;
+    }
+    .time {
+      font-size: 2.5rem;
+      margin: 1rem 0;
+      user-select:none;
+      letter-spacing: 0.05em;
+    }
+    button, select {
+      cursor: pointer;
+      border: none;
+      font-weight: 700;
+      border-radius: 12px;
+      padding: 0.75rem 1.4rem;
+      margin: 0.5rem 0.3rem;
+      transition: all 0.3s ease;
+      user-select:none;
+      outline-offset: 3px;
+    }
+    button:hover, select:hover {
+      filter: brightness(1.1);
+      transform: scale(1.05);
+    }
+    #score {
+      margin-top: 1rem;
+      font-size: 1.2rem;
+      font-weight: 600;
+      min-height: 1.2em;
+    }
+    #history {
+      margin-top: 1.5rem;
+      max-height: 130px;
+      overflow-y: auto;
+      text-align: left;
+      font-size: 0.9rem;
+      border-top: 1px solid;
+      padding-top: 1rem;
+    }
+    #history h2 {
+      font-size: 1.1rem;
+      margin: 0 0 0.6rem 0;
+      user-select:none;
+    }
+    #historyList {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+    }
+    #historyList li {
+      padding: 0.3rem 0.5rem;
+      border-radius: 6px;
+      cursor: default;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      user-select:none;
+      border: 1px solid transparent;
+      transition: background 0.3s, border-color 0.3s;
+    }
+    #historyList li:hover {
+      background: rgba(255 255 255 / 0.15);
+      border-color: currentColor;
+    }
+    #clearHistory {
+      margin-top: 0.8rem;
+      font-size: 0.85rem;
+      background: transparent;
+      border: 1px solid currentColor;
+      padding: 0.4rem 0.9rem;
+      border-radius: 10px;
+      user-select:none;
+    }
+    #clearHistory:hover {
+      background: currentColor;
+      color: var(--bg);
+      font-weight: 700;
+    }
+    label {
+      user-select:none;
+      font-weight: 600;
+      margin-right: 0.5rem;
+      display: inline-block;
+    }
+    .controls {
+      margin: 1rem 0 0.3rem 0;
+    }
+
+    /* Neon Theme (default) */
+    body.theme-neon {
+      background: linear-gradient(135deg, #0f0c29, #302b63, #24243e);
+      color: #00ffcc;
+      font-family: 'Orbitron', sans-serif;
+    }
+    body.theme-neon #app {
+      background: rgba(0, 255, 204, 0.12);
+      box-shadow:
+        0 0 15px #00ffcc,
+        0 0 40px #00ffcc,
+        inset 0 0 10px #00ffcc;
+    }
+    body.theme-neon button, body.theme-neon select {
+      background: #00ffcc;
+      color: #000;
+      box-shadow: 0 0 10px #00ffcc;
+      font-family: 'Orbitron', sans-serif;
+    }
+
+    /* Light Glass Theme */
+    body.theme-lightglass {
+      background: linear-gradient(135deg, #f0f4f8, #d9e2ec, #bcccdc);
+      color: #1b263b;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    }
+    body.theme-lightglass #app {
+      background: rgba(255 255 255 / 0.6);
+      box-shadow:
+        0 8px 32px 0 rgba(31, 38, 135, 0.37);
+      color: #1b263b;
+    }
+    body.theme-lightglass button, body.theme-lightglass select {
+      background: #1b263b;
+      color: #f0f4f8;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      box-shadow: none;
+    }
+
+    /* Cyberpunk Theme */
+    body.theme-cyberpunk {
+      background: #121014;
+      color: #ff00ff;
+      font-family: 'Audiowide', cursive;
+    }
+    body.theme-cyberpunk #app {
+      background: #1f001f;
+      box-shadow:
+        0 0 20px #ff00ff,
+        inset 0 0 15px #ff00ff;
+      color: #ff00ff;
+    }
+    body.theme-cyberpunk button, body.theme-cyberpunk select {
+      background: #ff00ff;
+      color: #121014;
+      font-family: 'Audiowide', cursive;
+      box-shadow: 0 0 10px #ff00ff;
+    }
+
+    /* Dark Minimal Theme */
+    body.theme-darkminimal {
+      background: #121212;
+      color: #ccc;
+      font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+    }
+    body.theme-darkminimal #app {
+      background: #222;
+      box-shadow:
+        0 0 15px rgba(255, 255, 255, 0.1);
+      color: #ccc;
+    }
+    body.theme-darkminimal button, body.theme-darkminimal select {
+      background: #444;
+      color: #ccc;
+      font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+      box-shadow: none;
+    }
+
+    /* Fonts Import */
+    @import url('https://fonts.googleapis.com/css2?family=Audiowide&family=Orbitron&display=swap');
+
+  </style>
+</head>
+<body>
+  <div id="app" role="main" aria-label="Precision Stopwatch Challenge">
+    <h1>Precision Stopwatch</h1>
+    <div>
+      <label for="themeSelector">Theme:</label>
+      <select id="themeSelector" aria-label="Choose theme">
+        <option value="neon">Neon (default)</option>
+        <option value="lightglass">Light Glass</option>
+        <option value="cyberpunk">Cyberpunk</option>
+        <option value="darkminimal">Dark Minimal</option>
+      </select>
+    </div>
+    <div class="goal" id="goal" aria-live="polite" aria-atomic="true"></div>
+    <div class="time" id="time" aria-live="polite" aria-atomic="true">0.00000</div>
+    <div class="controls" role="group" aria-label="Stopwatch controls">
+      <button id="startStop" aria-pressed="false" aria-label="Start or stop the stopwatch">Start</button>
+      <button id="reset" aria-label="Reset the stopwatch and start a new challenge">Reset</button>
+    </div>
+    <div id="score" aria-live="polite" aria-atomic="true"></div>
+
+    <section id="history" aria-label="Score history">
+      <h2>Score History</h2>
+      <ul id="historyList" role="list"></ul>
+      <button id="clearHistory" aria-label="Clear score history">Clear History</button>
+    </section>
+  </div>
+
+<script>
+  (() => {
+    const timeDisplay = document.getElementById('time');
+    const startStopBtn = document.getElementById('startStop');
+    const resetBtn = document.getElementById('reset');
+    const scoreDisplay = document.getElementById('score');
+    const goalDisplay = document.getElementById('goal');
+    const historyList = document.getElementById('historyList');
+    const clearHistoryBtn = document.getElementById('clearHistory');
+    const themeSelector = document.getElementById('themeSelector');
+    const app = document.getElementById('app');
+
+    let startTime = 0;
+    let running = false;
+    let timer = null;
+
+    // Challenge settings
+    const rangeRadius = 0.1; // ±0.1 seconds
+    const minTime = 3;
+    const maxTime = 7;
+
+    // Current challenge data
+    let targetCenter = 0;
+
+    // Score history max length
+    const maxHistory = 30;
+
+    // localStorage keys
+    const STORAGE_SCORES = 'precision_stopwatch_scores';
+    const STORAGE_THEME = 'precision_stopwatch_theme';
+
+    // Load scores from localStorage
+    let scoreHistory = JSON.parse(localStorage.getItem(STORAGE_SCORES)) || [];
+
+    // Load theme from localStorage
+    function loadTheme() {
+      let theme = localStorage.getItem(STORAGE_THEME) || 'neon';
+      themeSelector.value = theme;
+      document.body.className = `theme-${theme}`;
+    }
+
+    function saveTheme(theme) {
+      localStorage.setItem(STORAGE_THEME, theme);
+    }
+
+    // Save scores to localStorage
+    function saveScores() {
+      localStorage.setItem(STORAGE_SCORES, JSON.stringify(scoreHistory));
+    }
+
+    function addToHistory(scoreEntry) {
+      scoreHistory.unshift(scoreEntry);
+      if (scoreHistory.length > maxHistory) {
+        scoreHistory.pop();
+      }
+      saveScores();
+      renderHistory();
+    }
+
+    function renderHistory() {
+      historyList.innerHTML = '';
+      if (scoreHistory.length === 0) {
+        const li = document.createElement('li');
+        li.textContent = 'No scores yet.';
+        li.style.fontStyle = 'italic';
+        historyList.appendChild(li);
+        return;
+      }
+      for (let i = 0; i < scoreHistory.length; i++) {
+        const entry = scoreHistory[i];
+        const li = document.createElement('li');
+        li.textContent = `Score: ${entry.score} — Time: ${entry.elapsed.toFixed(5)}s — Goal: ${entry.goalMin.toFixed(5)}s - ${entry.goalMax.toFixed(5)}s`;
+        li.title = `Score: ${entry.score}, Elapsed time: ${entry.elapsed.toFixed(5)} seconds, Goal range: ${entry.goalMin.toFixed(5)} to ${entry.goalMax.toFixed(5)} seconds`;
+        historyList.appendChild(li);
+      }
+    }
+
+    function setNewGoal() {
+      targetCenter = parseFloat((Math.random() * (maxTime - minTime) + minTime).toFixed(5));
+      const minGoal = (targetCenter - rangeRadius).toFixed(5);
+      const maxGoal = (targetCenter + rangeRadius).toFixed(5);
+      goalDisplay.textContent = `Goal Range: ${minGoal}s — ${maxGoal}s`;
+    }
+
+    function updateTime() {
+      const elapsed = (performance.now() - startTime) / 1000;
+      timeDisplay.textContent = elapsed.toFixed(5);
+    }
+
+    function checkScore() {
+      const elapsed = parseFloat(timeDisplay.textContent);
+      const minGoal = targetCenter - rangeRadius;
+      const maxGoal = targetCenter + rangeRadius;
+      let score = 0;
+      if (elapsed >= minGoal && elapsed <= maxGoal) {
+        const diffFromCenter = Math.abs(elapsed - targetCenter);
+        score = Math.max(0, Math.round(100 - (diffFromCenter / rangeRadius) * 100));
+      }
+      scoreDisplay.textContent = `Score: ${score}`;
+
+      addToHistory({
+        score,
+        elapsed,
+        goalMin: minGoal,
+        goalMax: maxGoal,
+        timestamp: Date.now()
+      });
+    }
+
+    startStopBtn.addEventListener('click', () => {
+      if (!running) {
+        startTime = performance.now();
+        timer = setInterval(updateTime, 10);
+        running = true;
+        startStopBtn.textContent = 'Stop';
+        startStopBtn.setAttribute('aria-pressed', 'true');
+        scoreDisplay.textContent = '';
+      } else {
+        clearInterval(timer);
+        running = false;
+        startStopBtn.textContent = 'Start';
+        startStopBtn.setAttribute('aria-pressed', 'false');
+        checkScore();
+      }
+    });
+
+    resetBtn.addEventListener('click', () => {
+      clearInterval(timer);
+      running = false;
+      timeDisplay.textContent = '0.00000';
+      startStopBtn.textContent = 'Start';
+      startStopBtn.setAttribute('aria-pressed', 'false');
+      scoreDisplay.textContent = '';
+      setNewGoal();
+    });
+
+    clearHistoryBtn.addEventListener('click', () => {
+      scoreHistory = [];
+      saveScores();
+      renderHistory();
+    });
+
+    themeSelector.addEventListener('change', () => {
+      const theme = themeSelector.value;
+      document.body.className = `theme-${theme}`;
+      saveTheme(theme);
+    });
+
+    // Keyboard controls: Space = Start/Stop, R = Reset
+    window.addEventListener('keydown', (e) => {
+      if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA' || e.target.isContentEditable) return;
+      if (e.code === 'Space') {
+        e.preventDefault();
+        startStopBtn.click();
+      } else if (e.key.toLowerCase() === 'r') {
+        e.preventDefault();
+        resetBtn.click();
+      }
+    });
+
+    // Init
+    loadTheme();
+    renderHistory();
+    setNewGoal();
+
+  })();
+</script>
+
+</body>
+</html>
